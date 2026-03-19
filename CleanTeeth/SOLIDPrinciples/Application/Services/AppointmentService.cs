@@ -11,7 +11,7 @@ public class AppointmentService
 {
     private List<Appointment> _appointments = new List<Appointment>();
 
-    private readonly AppointmentRepository _repository;
+    private readonly IAppointmentRepository _repository;
     //private readonly EmailNotificationService _notification;  //Modificado
     private readonly IEmailService _emailService; //Nuevo
     //Nuevo requerimiento
@@ -38,7 +38,7 @@ public class AppointmentService
     //}
 
     public AppointmentService(
-        AppointmentRepository repository,
+        IAppointmentRepository repository,
         IEmailService emailService,
         IsmsServices ismsServices
     )

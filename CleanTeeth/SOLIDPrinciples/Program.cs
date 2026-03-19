@@ -1,5 +1,6 @@
 ﻿using CleanTeeth.Domain.Entities;
 using CleanTeeth.Domain.ValueObjects;
+using SOLIDPrinciples.Application.Interfaces;
 using SOLIDPrinciples.Application.Services;
 //using SOLIDPrinciples.Infrastructure.Notifications;
 using SOLIDPrinciples.Infrastructure.Notifications.Emails;
@@ -18,61 +19,29 @@ internal class Program
         Console.WriteLine("║  Sistema CleanTeeth - REFACTORIZADO                                                         ║");
         Console.WriteLine("╚═════════════════════════════════════════════════════════════════════════════════════════════╝\n");
 
-        // Crear Email del paciente
+        // 1. Crear Objetos de Dominio
         Email patientEmail = new Email("johndoe@email.com");
-
-        // Crear paciente
         Patient patient = new Patient("John Doe", patientEmail);
-
-        // Crear Email del dentista
         Email dentistEmail = new Email("dentist@gmail.com");
-
-        // Crear dentista
         Dentist dentist = new Dentist("Dr. Smith", dentistEmail);
-
-        // Crear consultorio
         DentalOffice dentalOffice = new DentalOffice("Consultorio de limpieza dental");
+        TimeInterval timeInterval = new TimeInterval(DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(2));
 
-        // Crear intervalo de tiempo
-        TimeInterval timeInterval = new TimeInterval(
-            DateTime.UtcNow.AddHours(1),
-            DateTime.UtcNow.AddHours(2)
-        );
+        Appointment appointment = new Appointment(patient.Id, dentist.Id, dentalOffice.Id, timeInterval);
 
-        // Crear cita (Appointment)
-        Appointment appointment = new Appointment(
-            patient.Id,
-            dentist.Id,
-            dentalOffice.Id,
-            timeInterval
-        );
+        // 2. Instanciar Dependencias (Infraestructura)
+        // Aquí es donde aplicamos lo que pidió tu ingeniero: usamos la interfaz
+        IAppointmentRepository repository = new FileAppointmentRepository();
 
-        // Crear el repositorio de citas y el servicio de notificaciones
-        var repository = new AppointmentRepository();
-        //var notification = new EmailNotificationService(); // Modifcado
-        //SmtpEmailService smtpEmailService = new SmtpEmailService()
-        //var smtpEmailService = new SmtpEmailService();
-        //var SendGridEmailServices = new SendGridIEmailService();//Nuevo
-       
-        //Practica
-        var BrevoEmailServices = new BrevoIEmailService();
+        // Servicios de notificación
+        var brevoEmailServices = new BrevoIEmailService();
+        var twilioISmsService = new TwilioISmsService();
 
-        //Enviar SMS
-        TwilioISmsService twilioISmsService = new TwilioISmsService();
+        // 3. Crear el servicio de citas (Inyectando las dependencias)
+        // Ahora sí, las variables ya existen antes de usarlas aquí
+        var appointmentService = new AppointmentService(repository, brevoEmailServices, twilioISmsService);
 
-
-
-        // Crear el servicio de citas
-        //AppointmentService appointmentService = new AppointmentService(repository, notification); //Modificado
-        //AppointmentService appointmentService = new AppointmentService(repository, smtpEmailService)
-        //AppointmentService appointmentService = new AppointmentService(repository, SendGridEmailServices);
-
-        //Practica 
-        AppointmentService appointmentService = new AppointmentService(repository, BrevoEmailServices, twilioISmsService);
-
-
-
-        // Agendar la cita
+        // 4. Ejecutar la acción
         appointmentService.Schedule(appointment, patientEmail, patient);
 
         Console.ReadLine();
